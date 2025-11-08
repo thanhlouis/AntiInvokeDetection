@@ -8,8 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019 # Giữ nguyên windows-2019 như bạn yêu cầu
-
+    runs-on: windows-latest # Giữ nguyên windows-2019 như bạn yêu cu
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
