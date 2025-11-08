@@ -1,0 +1,41 @@
+# Đặt tên cho workflow của bạn
+name: .NET Build and Test
+
+# Cấu hình khi nào workflow này sẽ chạy
+on:
+  # Chạy khi có code được push lên nhánh 'main' (hoặc 'master')
+  push:
+    branches: [ "main", "master" ]
+  # Chạy khi có Pull Request nhắm vào nhánh 'main' (hoặc 'master')
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    # Sử dụng máy ảo Ubuntu mới nhất để chạy build
+    # Bạn cũng có thể dùng 'windows-latest' nếu cần
+    runs-on: ubuntu-latest
+
+    steps:
+    # Bước 1: Lấy code từ repo của bạn về máy ảo
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Bước 2: Cài đặt .NET SDK
+    # Project này dùng .NET Standard 2.0, nên có thể build bằng SDK 6.0, 7.0 hoặc 8.0
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x' 
+
+    # Bước 3: Khôi phục các gói NuGet dependencies
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Bước 4: Build project ở chế độ Release
+    - name: Build project
+      run: dotnet build --configuration Release --no-restore
+      
+    # (Tùy chọn) Nếu project có tests, bạn có thể thêm bước này
+    # - name: Run tests
+    #   run: dotnet test --no-build --configuration Release
