@@ -14,14 +14,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         
-      # BƯỚC MỚI VÀ QUAN TRỌNG: Cài đặt Targeting Pack cho .NET Framework 4.5
-      - name: Install .NET Framework 4.5 Targeting Pack
-        uses: sayed/setup-dot-net-framework-targeting-packs@v1
-        with:
-          # Chỉ định phiên bản .NET Framework cần cài đặt Targeting Pack
-          framework-versions: '4.5' 
-
-      # --- CẤU HÌNH CÔNG CỤ ---
+      # BƯỚC MỚI: Tải và Cài đặt .NET Framework 4.5 Developer Pack bằng PowerShell
+      - name: Install .NET Framework 4.5 Targeting Pack Manually
+        run: |
+          # Đường dẫn tải xuống chính thức cho .NET Framework 4.5 Developer Pack
+          $url = "https://download.visualstudio.microsoft.com/download/pr/10903322/2a138980af463765181e19bc5a4b1ff3/NDP45-DevPack-KB2765955-ENU.exe"
+          $fileName = "NDP45-DevPack.exe"
+          
+          # Tải file cài đặt
+          Write-Host "Downloading .NET Framework 4.5 Developer Pack..."
+          Invoke-WebRequest -Uri $url -OutFile $fileName
+          
+          # Chạy cài đặt im lặng (/q)
+          Write-Host "Installing .NET Framework 4.5 Developer Pack..."
+          & ".\$fileName" /q /norestart
+          
+          # Dọn dẹp
+          Remove-Item $fileName
+        shell: powershell # Đảm bảo dùng PowerShell
+        
+      # --- CẤU HÌNH CÔNG CỤ (Giữ nguyên) ---
       
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1 
