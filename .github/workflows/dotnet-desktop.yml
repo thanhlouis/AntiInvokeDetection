@@ -1,4 +1,4 @@
-name: Build .NET Framework (Standard)
+name: Build AntiInvokeDetection .NET Framework
 
 on:
   push:
@@ -8,36 +8,41 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022 # Sử dụng image runner được hỗ trợ
+    # Chuyển sang runner được hỗ trợ: Windows Server 2022
+    runs-on: windows-2022 
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # BƯỚC 1: TỰ ĐỘNG CẤU HÌNH MSBUILD VÀO PATH
+      # --- CẤU HÌNH CÔNG CỤ ---
+      
+      # 1. Tự động tìm và thêm MSBuild (Visual Studio) vào PATH
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1 # Action này dùng vswhere để tìm và cấu hình
-        with:
-          # (Tùy chọn) Chỉ định kiến trúc nếu bạn không muốn x86 mặc định
-          # msbuild-architecture: x64 
-
-      # BƯỚC 2: CÀI ĐẶT CÔNG CỤ NUGET CLI
+        uses: microsoft/setup-msbuild@v1 
+        # Không cần tùy chỉnh đường dẫn cố định, Action này tự lo
+        
+      # 2. Cài đặt NuGet CLI
       - name: Setup NuGet CLI
         uses: nuget/setup-nuget@v1
-
-      # BƯỚC 3: KHÔI PHỤC GÓI (QUAN TRỌNG VỚI packages.config)
+        
+      # --- BUILD VÀ ĐÓNG GÓI ---
+      
+      # 3. Khôi phục các gói NuGet (quan trọng cho dnlib)
       - name: Restore NuGet Packages
-        # Luôn restore trên file .sln (solution) để đảm bảo tất cả project được xử lý
+        # Chạy trên file solution (.sln) để đảm bảo tất cả dependency được tải về
         run: nuget restore "Anti Invoke Detection.sln"
 
-      # BƯỚC 4: CHẠY MSBUILD
-      - name: Build Solution
-        # Khi dùng 'microsoft/setup-msbuild', bạn chỉ cần gọi 'msbuild'
-        # vì nó đã được thêm vào biến môi trường PATH
+      # 4. Chạy Build
+      - name: Build Solution (Release)
+        # Chỉ cần gọi 'msbuild' vì nó đã được thêm vào PATH
+        # Không cần đường dẫn dài và phức tạp
         run: msbuild "Anti Invoke Detection.sln" /p:Configuration=Release
 
+      # 5. Tải file .exe đã build lên làm Artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: exe-output
+          name: AntiInvokeDetection-exe
+          # Đường dẫn tới file .exe sau khi build thành công
           path: Anti Invoke Detection/bin/Release/Anti Invoke Detection.exe
