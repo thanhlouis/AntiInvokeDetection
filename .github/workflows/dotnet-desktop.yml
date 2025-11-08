@@ -8,41 +8,37 @@ on:
 
 jobs:
   build:
-    # Chuyển sang runner được hỗ trợ: Windows Server 2022
     runs-on: windows-2022 
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        
+      # BƯỚC MỚI VÀ QUAN TRỌNG: Cài đặt Targeting Pack cho .NET Framework 4.5
+      - name: Install .NET Framework 4.5 Targeting Pack
+        uses: sayed/setup-dot-net-framework-targeting-packs@v1
+        with:
+          # Chỉ định phiên bản .NET Framework cần cài đặt Targeting Pack
+          framework-versions: '4.5' 
 
       # --- CẤU HÌNH CÔNG CỤ ---
       
-      # 1. Tự động tìm và thêm MSBuild (Visual Studio) vào PATH
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1 
-        # Không cần tùy chỉnh đường dẫn cố định, Action này tự lo
         
-      # 2. Cài đặt NuGet CLI
       - name: Setup NuGet CLI
         uses: nuget/setup-nuget@v1
         
       # --- BUILD VÀ ĐÓNG GÓI ---
       
-      # 3. Khôi phục các gói NuGet (quan trọng cho dnlib)
       - name: Restore NuGet Packages
-        # Chạy trên file solution (.sln) để đảm bảo tất cả dependency được tải về
         run: nuget restore "Anti Invoke Detection.sln"
 
-      # 4. Chạy Build
       - name: Build Solution (Release)
-        # Chỉ cần gọi 'msbuild' vì nó đã được thêm vào PATH
-        # Không cần đường dẫn dài và phức tạp
         run: msbuild "Anti Invoke Detection.sln" /p:Configuration=Release
 
-      # 5. Tải file .exe đã build lên làm Artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AntiInvokeDetection-exe
-          # Đường dẫn tới file .exe sau khi build thành công
           path: Anti Invoke Detection/bin/Release/Anti Invoke Detection.exe
