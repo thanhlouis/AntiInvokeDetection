@@ -1,4 +1,4 @@
-name: Build .NET exe & upload artifact
+name: Build .NET Framework 4.5 & upload artifact
 
 on:
   push:
@@ -13,25 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x' # Chỉnh version phù hợp dự án
+      - name: Install .NET Framework 4.5 Developer Pack
+        run: |
+          choco install netfx-4.5-devpack --limit-output --no-progress
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release
-
-      - name: Publish (tạo exe)
-        run: dotnet publish -c Release -o ./publish
-
-      - name: Hiện nội dung thư mục publish
-        run: dir ./publish
+      - name: Build with MSBuild
+        run: |
+          msbuild "Anti Invoke Detection/Anti Invoke Detection.csproj" /p:Configuration=Release
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: ./publish/
+          name: exe-output
+          path: Anti Invoke Detection/bin/Release/
