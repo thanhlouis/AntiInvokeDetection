@@ -8,18 +8,30 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019     # hoặc windows-2022 thử xem, KHÔNG dùng windows-latest nếu có lỗi
+    runs-on: windows-2019 # Giữ nguyên windows-2019 như bạn yêu cầu
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # Chạy build bằng MSBuild (không cần dotnet, không cần choco)
+      # BƯỚC THÊM 1: Cài đặt nuget.exe
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+        # Mặc định sẽ dùng bản nuget mới nhất
+
+      # BƯỚC THÊM 2: Chạy restore trên file .sln
+      - name: Restore NuGet packages
+        run: nuget restore "Anti Invoke Detection.sln"
+
+      # BƯỚC BUILD: Đã sửa lại để build file .sln (tốt hơn là build .csproj)
       - name: Build with MSBuild
         run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "Anti Invoke Detection/Anti Invoke Detection.csproj" /p:Configuration=Release
+          "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "Anti Invoke Detection.sln" /p:Configuration=Release
 
+      # Bước upload artifact (giữ nguyên)
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: exe-output
-          path: Anti Invoke Detection/bin/Release/
+          # Đường dẫn này là chính xác vì .sln sẽ build ra thư mục con
+          path: Anti Invoke Detection/bin/Release/Anti Invoke Detection.exe
