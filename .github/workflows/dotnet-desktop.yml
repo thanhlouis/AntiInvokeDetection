@@ -1,36 +1,43 @@
-name: Build .NET Framework 4.5 and upload artifact
+name: Build .NET Framework (Standard)
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   build:
-    runs-on: windows-latest # Giữ nguyên windows-2019 như bạn yêu cu
+    runs-on: windows-2022 # Sử dụng image runner được hỗ trợ
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # BƯỚC THÊM 1: Cài đặt nuget.exe
-      - name: Setup NuGet
-        uses: nuget/setup-nuget@v2
-        # Mặc định sẽ dùng bản nuget mới nhất
+      # BƯỚC 1: TỰ ĐỘNG CẤU HÌNH MSBUILD VÀO PATH
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1 # Action này dùng vswhere để tìm và cấu hình
+        with:
+          # (Tùy chọn) Chỉ định kiến trúc nếu bạn không muốn x86 mặc định
+          # msbuild-architecture: x64 
 
-      # BƯỚC THÊM 2: Chạy restore trên file .sln
-      - name: Restore NuGet packages
+      # BƯỚC 2: CÀI ĐẶT CÔNG CỤ NUGET CLI
+      - name: Setup NuGet CLI
+        uses: nuget/setup-nuget@v1
+
+      # BƯỚC 3: KHÔI PHỤC GÓI (QUAN TRỌNG VỚI packages.config)
+      - name: Restore NuGet Packages
+        # Luôn restore trên file .sln (solution) để đảm bảo tất cả project được xử lý
         run: nuget restore "Anti Invoke Detection.sln"
 
-      # BƯỚC BUILD: Đã sửa lại để build file .sln (tốt hơn là build .csproj)
-      - name: Build with MSBuild
-        run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "Anti Invoke Detection.sln" /p:Configuration=Release
+      # BƯỚC 4: CHẠY MSBUILD
+      - name: Build Solution
+        # Khi dùng 'microsoft/setup-msbuild', bạn chỉ cần gọi 'msbuild'
+        # vì nó đã được thêm vào biến môi trường PATH
+        run: msbuild "Anti Invoke Detection.sln" /p:Configuration=Release
 
-      # Bước upload artifact (giữ nguyên)
-      - name: Upload exe artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: exe-output
-          # Đường dẫn này là chính xác vì .sln sẽ build ra thư mục con
           path: Anti Invoke Detection/bin/Release/Anti Invoke Detection.exe
